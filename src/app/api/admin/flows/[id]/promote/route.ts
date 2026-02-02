@@ -4,17 +4,18 @@ import { isAdminSecretValid } from "@/lib/admin";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get("secret");
+  const { id } = await params;
 
   if (!isAdminSecretValid(secret)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const flowRun = await prisma.flowRun.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!flowRun) {
