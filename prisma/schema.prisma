@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Explanation {
+  id               String              @id @default(uuid())
+  canonicalKey     String
+  canonicalTopic   String
+  groupKey         String
+  level            String
+  structureVersion String
+  content          Json
+  visibility       String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  variants         ExplanationVariant[]
+  signals          Signal[]
+
+  @@index([groupKey, level])
+  @@index([canonicalKey])
+}
+
+model ExplanationVariant {
+  id           String     @id @default(uuid())
+  explanationId String
+  groupKey     String
+  variantLabel String?
+  content      Json
+  metadata     Json?
+  helpfulScore Int        @default(0)
+  metaphorTags String[]
+  createdAt    DateTime   @default(now())
+
+  explanation  Explanation @relation(fields: [explanationId], references: [id])
+  signals      Signal[]
+
+  @@index([groupKey])
+  @@index([explanationId])
+}
+
+model FlowRun {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  rawQuery      String
+  level         String
+  status        String
+  cacheHit      Boolean
+  canonicalTopic String?
+  groupKey      String?
+  errorMessage  String?
+  trace         Json
+
+  @@index([createdAt])
+  @@index([groupKey])
+}
+
+model Signal {
+  id           String              @id @default(uuid())
+  createdAt    DateTime            @default(now())
+  signalType   String
+  explanationId String?
+  variantId    String?
+  explanation  Explanation?        @relation(fields: [explanationId], references: [id])
+  variant      ExplanationVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([explanationId])
+  @@index([variantId])
+}

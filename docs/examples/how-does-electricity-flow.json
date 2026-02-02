@@ -1,0 +1,114 @@
+{
+  "eli5": {
+    "topic": "how does electricity flow",
+    "level": "eli5",
+    "title": "Electricity is like a moving crowd",
+    "summary": "Electricity flows when tiny charges move together in a loop, like a crowd passing a message hand to hand.",
+    "blocks": [
+      {
+        "type": "analogy",
+        "title": "Crowd in a hallway",
+        "text": "Imagine a hallway full of people. If one person nudges forward, everyone shifts a tiny bit. Electricity is similar: charges nudge along a path, and that motion is the flow."
+      },
+      {
+        "type": "steps",
+        "title": "What needs to happen",
+        "items": [
+          "You need a path (like a wire) for charges to move through.",
+          "You need a push (a battery) to get them moving.",
+          "The path must be a loop so the motion can continue."
+        ]
+      },
+      {
+        "type": "intuition",
+        "title": "The loop matters",
+        "text": "If the loop is broken, the charges can’t keep moving, so the flow stops. That’s why a light turns off when a switch opens the circuit."
+      },
+      {
+        "type": "check",
+        "questions": [
+          "What provides the push for charges to move?",
+          "Why does the path need to be a loop?"
+        ]
+      }
+    ],
+    "relatedTopics": [
+      "What is a circuit?",
+      "What does a battery do?",
+      "Why do metals conduct electricity?"
+    ]
+  },
+  "eli10": {
+    "topic": "how does electricity flow",
+    "level": "eli10",
+    "title": "Electric current is moving charge",
+    "summary": "Electricity flows when electric charge moves through a conductor because a voltage pushes it around a closed circuit.",
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "Core idea"
+      },
+      {
+        "type": "paragraph",
+        "text": "Electric current is the movement of electric charges (mostly electrons) through a material. A battery or power supply creates a voltage that pushes these charges, and the charges drift through the circuit."
+      },
+      {
+        "type": "steps",
+        "title": "The ingredients",
+        "items": [
+          "A conductor with free charges (like a metal wire).",
+          "A voltage source that provides an electric push.",
+          "A closed loop so charges can keep circulating."
+        ]
+      },
+      {
+        "type": "analogy",
+        "title": "Marbles on a track",
+        "text": "Picture marbles on a circular track. If you push one marble, the push travels around the loop. Voltage is the push, and the moving marbles are the current."
+      },
+      {
+        "type": "technical",
+        "title": "Current and resistance",
+        "text": "The amount of current depends on how strong the voltage is and how much resistance the material has. More resistance means less current for the same voltage."
+      }
+    ],
+    "relatedTopics": [
+      "Ohm’s law",
+      "Series and parallel circuits",
+      "What is voltage?"
+    ]
+  },
+  "expert": {
+    "topic": "how does electricity flow",
+    "level": "expert",
+    "title": "Charge transport driven by electric fields",
+    "summary": "Electric current is the net drift of charge carriers in response to an electric field established by a potential difference across a closed circuit.",
+    "blocks": [
+      {
+        "type": "technical",
+        "title": "Field-driven drift",
+        "text": "A voltage source sets up an electric field along a conductor. Charge carriers acquire a small drift velocity superimposed on thermal motion, producing a net current."
+      },
+      {
+        "type": "equation",
+        "latex": "I = n q A v_d",
+        "explanation": "Current $I$ equals carrier density $n$, charge $q$, cross-sectional area $A$, and drift velocity $v_d$."
+      },
+      {
+        "type": "technical",
+        "title": "Circuit continuity",
+        "text": "Charge conservation requires a closed path for steady-state current. Any break produces charge accumulation, altering the local field until current stops."
+      },
+      {
+        "type": "callout",
+        "tone": "note",
+        "text": "Metals conduct well because of delocalized electrons; insulators lack mobile carriers under typical fields."
+      }
+    ],
+    "relatedTopics": [
+      "Drift velocity and mobility",
+      "Resistivity and conductivity",
+      "Maxwell’s equations in circuits"
+    ]
+  }
+}

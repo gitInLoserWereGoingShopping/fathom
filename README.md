@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fathom
 
-## Getting Started
+Fathom is a learning system that converts curiosity into understanding. It supports multiple explanation styles, three depth levels, and a full observability pipeline for admin verification.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Three explanation levels: eli5, eli10, expert.
+- Retrieval-first caching to avoid unnecessary model calls.
+- Structured schema validation with Zod.
+- Postgres persistence via Prisma.
+- Admin flow tracing with step-by-step pipeline logs.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Requirements
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 18+
+- Postgres database (Neon or Supabase compatible)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup
 
-## Learn More
+1. Install dependencies:
+   - npm install
+2. Configure environment:
+   - Copy .env.example to .env.local
+   - Fill in OPENAI_API_KEY, DATABASE_URL, ADMIN_SECRET
+3. Generate Prisma client:
+   - npm run db:generate
+4. Apply migrations:
+   - npm run db:migrate
+5. Start the dev server:
+   - npm run dev
 
-To learn more about Next.js, take a look at the following resources:
+Open http://localhost:3000 to use the app.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Admin
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Admin routes require a query param secret:
 
-## Deploy on Vercel
+- /admin/flows?secret=YOUR_SECRET
+- /admin/flows/[id]?secret=YOUR_SECRET
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Example Responses
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [docs/examples/how-does-electricity-flow.json](docs/examples/how-does-electricity-flow.json) for sample responses in all three levels.
+
+## Decision Log
+
+See [docs/decision-log.md](docs/decision-log.md).
