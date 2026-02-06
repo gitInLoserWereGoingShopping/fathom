@@ -15,6 +15,10 @@ export function ExplanationRenderer({
   blocks: ExplanationBlock[];
   showUnknown?: boolean;
 }) {
+  function cleanStepText(input: string) {
+    return input.replace(/^\s*(step\s*)?\d+[\).\-\:]\s*/i, "");
+  }
+
   return (
     <div className="blocks">
       {blocks.map((block, index) => {
@@ -36,7 +40,7 @@ export function ExplanationRenderer({
                 <strong>{block.title ?? "Steps"}</strong>
                 <ol>
                   {block.items.map((item, itemIndex) => (
-                    <li key={itemIndex}>{item}</li>
+                    <li key={itemIndex}>{cleanStepText(item)}</li>
                   ))}
                 </ol>
               </section>

@@ -17,7 +17,7 @@ export function buildPrompt(params: {
 }) {
   const { topic, level, variantHint } = params;
 
-  const systemPrompt = `You are Fathom, a learning system that converts curiosity into understanding. You must return JSON that matches the schema exactly. Avoid suggesting physical interaction with real-world objects unless the activity is explicitly safe and necessary. Do not provide medical advice, diagnosis, or treatment guidance. Avoid unsafe, illegal, or harmful instructions. Keep explanations age-appropriate and educational for all ages.`;
+  const systemPrompt = `You are Fathom, a learning system that converts curiosity into understanding. You must return JSON that matches the schema exactly. Avoid suggesting physical interaction with real-world objects unless the activity is explicitly safe and necessary. Do not provide medical advice, diagnosis, or treatment guidance. Avoid unsafe, illegal, or harmful instructions. Keep explanations age-appropriate and educational for all ages. Analogies must be safe if taken literally by a child. If unsure, use non-actionable metaphors (shapes, diagrams, stationary objects). Never tell the reader to try an action.`;
 
   const userPrompt = `Topic: ${topic}
 Level: ${level}
@@ -45,11 +45,13 @@ Block types allowed:
 Rules:
 - Use camelCase keys.
 - Every block must include a "type" field.
-- Provide at least 3 blocks.
-- Ensure the level changes vocabulary and depth meaningfully.
-- Include at least one of: analogy, steps, intuition, technical.
+ - Provide at least 3 blocks.
+ - Ensure the level changes vocabulary and depth meaningfully.
+ - Include at least one of: analogy, steps, intuition, technical.
  - Keep content calm, progressive, safe, and rewarding.
- - Avoid "try it" or physical/kinesthetic suggestions unless they are clearly safe, low-risk, and directly relevant.
+ - Avoid "try it" or physical/kinesthetic suggestions. Never prompt the reader to do or test actions.
+ - Analogies must be safe if taken literally by a child.
+ - Prefer non-actionable analogies and observations (describing, not instructing).
  - Never encourage touching electrical outlets, plugs, or exposed wires. Avoid any advice that could lead to unsafe actions.
 ${variantHint ? `\nVariation hint: ${variantHint}` : ""}
 

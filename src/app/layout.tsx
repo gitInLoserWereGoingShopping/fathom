@@ -25,6 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} body`}>
+        <div className="theme-art theme-art-a" aria-hidden="true" />
+        <div className="theme-art theme-art-b" aria-hidden="true" />
         {children}
       </body>
     </html>
