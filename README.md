@@ -37,6 +37,13 @@ Admin routes require a query param secret:
 
 - /admin/flows?secret=YOUR_SECRET
 - /admin/flows/[id]?secret=YOUR_SECRET
+- /admin/reports?secret=YOUR_SECRET
+
+## Seeding Topics (One-Time)
+
+Generate all domain topics for ELI5, ELI10, and Expert:
+
+- npm run seed:topics
 
 ## Example Responses
 

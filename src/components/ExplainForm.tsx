@@ -36,6 +36,12 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     "idle" | "sending" | "sent" | "error"
   >("idle");
   const [loadingStep, setLoadingStep] = useState(0);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportStatus, setReportStatus] = useState<
+    "idle" | "sending" | "sent" | "error" | "limited"
+  >("idle");
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -144,6 +150,10 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     setError(null);
     setSignalSelection(null);
     setSignalStatus("idle");
+    setReportStatus("idle");
+    setReportMessage(null);
+    setReportOpen(false);
+    setReportReason("");
     setActiveTheme(classifyDomain(nextQuery ?? query));
     const queryValue = nextQuery ?? query;
     const response = await fetch("/api/explain", {
@@ -163,7 +173,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     setLoading(false);
   }
 
-  async function sendSignal(signalType: "helpful" | "tooComplex" | "branched") {
+  async function sendSignal(signalType: "helpful" | "tooComplex") {
     if (!result?.explanationId) return;
     setSignalStatus("sending");
     try {
@@ -186,10 +196,52 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     }
   }
 
-  function handleSignalClick(signalType: "helpful" | "tooComplex" | "branched") {
+  function handleSignalClick(signalType: "helpful" | "tooComplex") {
     if (signalSelection === signalType) return;
     setSignalSelection(signalType);
     void sendSignal(signalType);
+  }
+
+  async function submitReport() {
+    if (!result?.explanationId) return;
+    if (reportReason.trim().length < 8) {
+      setReportStatus("error");
+      return;
+    }
+    setReportStatus("sending");
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          explanationId: result.explanationId,
+          variantId: result.variantId,
+          reason: reportReason.trim(),
+        }),
+      });
+      if (response.status === 429) {
+        setReportStatus("limited");
+        return;
+      }
+      if (!response.ok) {
+        setReportStatus("error");
+        return;
+      }
+      setReportStatus("sent");
+      setReportMessage(
+        "Thanks for flagging this. The response was hidden and sent for review.",
+      );
+      setResult(null);
+      setReportReason("");
+      setReportOpen(false);
+    } catch (error) {
+      setReportStatus("error");
+    }
+  }
+
+  function scrollToTop() {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
@@ -245,14 +297,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           ) : null}
         </div>
         {error ? <p className="error-text">{error}</p> : null}
-        {result ? (
-          <p className="muted">
-            {result.status === "retrieved"
-              ? "Retrieved from cache"
-              : "Generated fresh"}
-            {result.cacheHit ? " · cache hit" : ""}
-          </p>
-        ) : null}
+        {reportMessage ? <p className="muted">{reportMessage}</p> : null}
       </section>
 
       {loading ? (
@@ -298,7 +343,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           </div>
 
           <div className="card">
-            <h3>Signals</h3>
+            <h3>Was this helpful?</h3>
             <div className="actions">
               <button
                 className="btn secondary"
@@ -326,18 +371,57 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
               </button>
               <button
                 className="btn secondary"
-                onClick={() => handleSignalClick("branched")}
-                disabled={
-                  !result.explanationId ||
-                  signalSelection === "branched" ||
-                  signalStatus === "sending"
-                }
+                onClick={() => setReportOpen(true)}
+                disabled={!result.explanationId || signalStatus === "sending"}
               >
-                {signalSelection === "branched" ? "Branched out ✓" : "Branched out"}
+                Report unsafe
               </button>
             </div>
             {signalStatus === "error" ? (
               <p className="error-text">Signal failed. Try again.</p>
+            ) : null}
+            {reportOpen ? (
+              <div className="report-box">
+                <label className="label" htmlFor="report-reason">
+                  What felt unsafe?
+                </label>
+                <textarea
+                  id="report-reason"
+                  className="input"
+                  rows={3}
+                  placeholder="Describe the issue so we can review it."
+                  value={reportReason}
+                  onChange={(event) => setReportReason(event.target.value)}
+                />
+                <div className="actions">
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={submitReport}
+                    disabled={
+                      reportStatus === "sending" ||
+                      reportReason.trim().length < 8
+                    }
+                  >
+                    {reportStatus === "sending" ? "Sending..." : "Submit report"}
+                  </button>
+                  <button
+                    className="btn secondary"
+                    type="button"
+                    onClick={() => setReportOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {reportStatus === "limited" ? (
+                  <p className="error-text">
+                    You&apos;ve hit the daily limit. Try again tomorrow.
+                  </p>
+                ) : null}
+                {reportStatus === "error" ? (
+                  <p className="error-text">Report failed. Try again.</p>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </section>
@@ -353,6 +437,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                 className="tag"
                 onClick={() => {
                   setQuery(topic);
+                  scrollToTop();
                   handleSubmit("default", topic);
                 }}
               >
@@ -366,12 +451,13 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       <section className="card">
         <h3>Seed topics</h3>
         <div className="tag-list">
-      {seedTopics.map((topic) => (
+          {seedTopics.map((topic) => (
             <button
               key={topic}
               className="tag"
               onClick={() => {
                 setQuery(topic);
+                scrollToTop();
                 handleSubmit("default", topic);
               }}
             >
@@ -397,6 +483,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                     className="tag"
                     onClick={() => {
                       setQuery(topic);
+                      scrollToTop();
                       handleSubmit("default", topic);
                     }}
                   >

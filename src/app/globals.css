@@ -334,6 +334,25 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.06);
   padding: 20px;
   box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
+  position: relative;
+  z-index: 3;
+}
+
+.hero-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.how-it-works {
+  display: grid;
+  gap: 6px;
+}
+
+.how-it-works .subhead {
+  margin-top: 0;
 }
 
 .eyebrow {
@@ -586,6 +605,10 @@ a {
   margin-top: 16px;
 }
 
+.blocks ol {
+  padding-left: 22px;
+}
+
 .blocks h3,
 .card > h3 {
   display: inline-flex;
@@ -672,6 +695,51 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.report-box {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.icon-button:active {
+  transform: scale(0.95);
+}
+
+.feedback-widget {
+  position: relative;
+}
+
+.feedback-popover {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: min(320px, 80vw);
+  background: rgba(16, 22, 32, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+  z-index: 50;
+  display: grid;
+  gap: 10px;
 }
 
 .domain-grid {
