@@ -266,7 +266,13 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
               className={`pill ${level === value ? "active" : ""}`}
               onClick={() => setLevel(value)}
             >
-              <span className="pill-title">{value.toUpperCase()}</span>
+              <span className="pill-title">
+                {value === "eli5"
+                  ? "Explain Like I’m 5"
+                  : value === "eli10"
+                    ? "Explain Like I’m 10"
+                    : "Explain Like I'm an Expert"}
+              </span>
               <span className="pill-subtitle">{levelDescriptions[value]}</span>
             </button>
           ))}
@@ -310,8 +316,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
               </div>
               <h2>{loadingPlan.label}</h2>
               <p className="muted">
-                Crafting an explanation tailored to{" "}
-                {level.toUpperCase()} depth.
+                Crafting an explanation tailored to {level.toUpperCase()} depth.
               </p>
             </div>
           </div>
@@ -403,7 +408,9 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                       reportReason.trim().length < 8
                     }
                   >
-                    {reportStatus === "sending" ? "Sending..." : "Submit report"}
+                    {reportStatus === "sending"
+                      ? "Sending..."
+                      : "Submit report"}
                   </button>
                   <button
                     className="btn secondary"

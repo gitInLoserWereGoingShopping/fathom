@@ -279,7 +279,9 @@ body::after {
   opacity: var(--theme-art-opacity);
   filter: saturate(1.2);
   animation: slow-pan 140s ease-in-out infinite;
-  transition: opacity 1.2s ease, filter 1.2s ease;
+  transition:
+    opacity 1.2s ease,
+    filter 1.2s ease;
 }
 
 .theme-art-a {
@@ -513,6 +515,12 @@ a {
   margin-top: 16px;
 }
 
+@media (max-width: 680px) {
+  .levels {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pill {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -715,7 +723,9 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
 }
 
 .icon-button:active {
