@@ -1,6 +1,5 @@
 import { ExplainForm } from "@/components/ExplainForm";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
-import { seedTopics } from "@/lib/seed-topics";
 
 export default function Home() {
   return (
@@ -28,7 +27,7 @@ export default function Home() {
         </div>
       </header>
 
-      <ExplainForm seedTopics={seedTopics} />
+      <ExplainForm />
     </div>
   );
 }

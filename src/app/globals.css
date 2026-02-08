@@ -797,6 +797,11 @@ a {
   gap: 12px;
 }
 
+.domain-questions {
+  display: grid;
+  gap: 8px;
+}
+
 .domain-card h4 {
   margin-bottom: 4px;
 }

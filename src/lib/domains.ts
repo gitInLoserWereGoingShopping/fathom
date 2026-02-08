@@ -15,6 +15,7 @@ export type DomainDefinition = {
   label: string;
   description: string;
   topics: string[];
+  questions: string[];
 };
 
 export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
@@ -30,6 +31,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Space travel (realistic)",
       "Stars and life cycles",
     ],
+    questions: [
+      "Why do planets stay in orbit instead of falling into the Sun?",
+      "How can black holes grow so massive?",
+      "What would a day feel like on a planet with two suns?",
+    ],
   },
   {
     id: "nature",
@@ -42,6 +48,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Ecosystems & food webs",
       "Evolution (intro)",
       "Plants & photosynthesis",
+    ],
+    questions: [
+      "How do cells know what job to do in the body?",
+      "Why do some animals live in groups while others live alone?",
+      "How do plants turn sunlight into usable energy?",
     ],
   },
   {
@@ -56,6 +67,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Heat & thermodynamics",
       "Waves & sound",
     ],
+    questions: [
+      "Why do we feel acceleration but not constant motion?",
+      "How can light bend without touching anything?",
+      "What makes electricity and magnetism two sides of one thing?",
+    ],
   },
   {
     id: "chemistry",
@@ -68,6 +84,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Materials (polymers, metals)",
       "Mixtures & solutions",
       "Reactions",
+    ],
+    questions: [
+      "Why do some reactions happen instantly while others take years?",
+      "How can the same atoms make totally different materials?",
+      "What actually changes when something dissolves?",
     ],
   },
   {
@@ -82,6 +103,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Water cycle",
       "Weather & storms",
     ],
+    questions: [
+      "Why do earthquakes happen in certain places more than others?",
+      "How does water travel around the planet for centuries?",
+      "What makes a storm grow into a hurricane?",
+    ],
   },
   {
     id: "ocean",
@@ -94,6 +120,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Tides and gravity",
       "Water pressure",
       "Waves and energy",
+    ],
+    questions: [
+      "Why do ocean currents shape climate far away?",
+      "How do tides follow the Moon so precisely?",
+      "What changes as you go deeper into the ocean?",
     ],
   },
   {
@@ -108,6 +139,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Senses & perception",
       "Sleep & the brain",
     ],
+    questions: [
+      "Why do we forget some things but remember others?",
+      "How does the brain decide what to pay attention to?",
+      "What is sleep actually doing for the brain?",
+    ],
   },
   {
     id: "engineering",
@@ -120,6 +156,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Materials engineering",
       "Robotics (safe)",
       "Structures & bridges",
+    ],
+    questions: [
+      "How do engineers make bridges both strong and light?",
+      "Why do simple machines make work feel easier?",
+      "What makes a prototype valuable even if it fails?",
     ],
   },
   {
@@ -134,6 +175,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Networks & internet",
       "Security (safe habits)",
     ],
+    questions: [
+      "How can the internet deliver data from anywhere so fast?",
+      "Why does compression work better on some data than others?",
+      "What makes an algorithm efficient?",
+    ],
   },
   {
     id: "math",
@@ -147,6 +193,11 @@ export const DOMAIN_DEFINITIONS: DomainDefinition[] = [
       "Measurement & units",
       "Patterns",
       "Probability",
+    ],
+    questions: [
+      "How do we think about numbers too big to imagine?",
+      "Why are units as important as numbers?",
+      "How can probability describe the real world?",
     ],
   },
 ];

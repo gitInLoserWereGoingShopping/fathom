@@ -22,7 +22,7 @@ type ExplainResponse = {
   message?: string;
 };
 
-export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
+export function ExplainForm() {
   const formRef = useRef<HTMLElement | null>(null);
   const answerRef = useRef<HTMLElement | null>(null);
   const [query, setQuery] = useState("");
@@ -56,6 +56,62 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
   const relatedTopics = useMemo(() => {
     return result?.explanation?.relatedTopics ?? [];
   }, [result]);
+
+  const moreToExplore = useMemo(() => {
+    const fallbackQuestions = [
+      "Why do patterns appear in nature and math?",
+      "How does energy move through systems?",
+      "Why do small changes sometimes cause big effects?",
+      "What makes a good model of a complex system?",
+      "How do we measure things we can’t see directly?",
+    ];
+
+    if (!result?.explanation) {
+      const perDomain = DOMAIN_DEFINITIONS.map(
+        (domain) => domain.questions[0],
+      );
+      return [...perDomain, ...fallbackQuestions].slice(0, 15);
+    }
+
+    const topic = result.explanation.topic ?? result.explanation.title ?? "";
+    const normalized = topic.toLowerCase();
+    const domainMatch = DOMAIN_DEFINITIONS.find((domain) =>
+      domain.topics.some((t) => t.toLowerCase() === normalized),
+    );
+    const domain =
+      domainMatch ??
+      DOMAIN_DEFINITIONS.find((entry) => entry.id === classifyDomain(topic));
+    const domainQuestions = domain?.questions ?? [];
+    const relatedQuestion =
+      relatedTopics.length >= 3
+        ? [
+            `How do ${relatedTopics[0]}, ${relatedTopics[1]}, and ${relatedTopics[2]} relate to each other?`,
+            `What connects ${relatedTopics[0]}, ${relatedTopics[1]}, and ${relatedTopics[2]}?`,
+            `How do ${relatedTopics[0]} and ${relatedTopics[1]} shape ${relatedTopics[2]}?`,
+          ]
+        : relatedTopics.length === 2
+          ? [
+              `How do ${relatedTopics[0]} and ${relatedTopics[1]} relate to each other?`,
+              `What do ${relatedTopics[0]} and ${relatedTopics[1]} have in common?`,
+              `How does ${relatedTopics[0]} influence ${relatedTopics[1]}?`,
+            ]
+          : relatedTopics.length === 1
+            ? [
+                `How does ${relatedTopics[0]} connect to this topic?`,
+                `Why is ${relatedTopics[0]} important here?`,
+                `How can ${relatedTopics[0]} help explain this?`,
+              ]
+            : undefined;
+    const pickRelated =
+      relatedQuestion && relatedQuestion.length > 0
+        ? relatedQuestion[Math.floor(Math.random() * relatedQuestion.length)]
+        : undefined;
+    const combined = [
+      ...domainQuestions,
+      ...(pickRelated ? [pickRelated] : []),
+    ];
+    return Array.from(new Set(combined)).slice(0, 10);
+  }, [result, relatedTopics]);
 
   const bonusInsights = useMemo(() => {
     const topic =
@@ -530,7 +586,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
         </section>
       ) : null}
 
-      {relatedTopics.length > 0 ? (
+      {result?.explanation && relatedTopics.length > 0 ? (
         <section className="card">
           <h3>Explore related ideas</h3>
           <div className="tag-list-explore-related">
@@ -551,24 +607,26 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
         </section>
       ) : null}
 
-      <section className="card">
-        <h3>Seed topics</h3>
-        <div className="tag-list-seed-topics">
-          {seedTopics.map((topic) => (
-            <button
-              key={topic}
-              className="tag"
-              onClick={() => {
-                setQuery(topic);
-                scrollToForm();
-                handleSubmit("default", topic);
-              }}
-            >
-              {topic}
-            </button>
-          ))}
-        </div>
-      </section>
+      {result?.explanation && moreToExplore.length > 0 ? (
+        <section className="card">
+          <h3>More to explore</h3>
+          <div className="tag-list-seed-topics">
+            {moreToExplore.map((topic) => (
+              <button
+                key={topic}
+                className="tag"
+                onClick={() => {
+                  setQuery(topic);
+                  scrollToForm();
+                  handleSubmit("default", topic);
+                }}
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="card">
         <h3>Explore by domain</h3>
@@ -592,10 +650,45 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                   </button>
                 ))}
               </div>
+              <div className="domain-questions">
+                <p className="muted">Try a question</p>
+                <div className="tag-list">
+                  {domain.questions.map((question) => (
+                    <button
+                      key={question}
+                      className="tag"
+                      onClick={() => handleDomainTopicClick(domain.id, question)}
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </section>
+
+      {!result?.explanation && moreToExplore.length > 0 ? (
+        <section className="card">
+          <h3>More to explore</h3>
+          <div className="tag-list-seed-topics">
+            {moreToExplore.map((topic) => (
+              <button
+                key={topic}
+                className="tag"
+                onClick={() => {
+                  setQuery(topic);
+                  scrollToForm();
+                  handleSubmit("default", topic);
+                }}
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
