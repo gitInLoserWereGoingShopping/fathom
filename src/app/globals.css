@@ -618,6 +618,22 @@ a {
   margin-top: 16px;
 }
 
+.bonus-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: rgba(16, 22, 32, 0.4);
+  display: grid;
+  gap: 8px;
+}
+
+.bonus-card ul {
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
 .blocks ol {
   padding-left: 22px;
 }

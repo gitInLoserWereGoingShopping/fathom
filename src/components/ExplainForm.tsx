@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Explanation, ExplanationLevel } from "@/lib/schema";
 import { ExplanationRenderer } from "@/components/ExplanationRenderer";
 import { classifyDomain, DOMAIN_DEFINITIONS } from "@/lib/domains";
+import { BONUS_INSIGHTS } from "@/lib/bonus-insights";
 
 const levelDescriptions: Record<ExplanationLevel, string> = {
   eli5: "Very accessible, concrete, metaphor-friendly.",
@@ -54,6 +55,12 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
 
   const relatedTopics = useMemo(() => {
     return result?.explanation?.relatedTopics ?? [];
+  }, [result]);
+
+  const bonusInsights = useMemo(() => {
+    const topic =
+      (result?.explanation?.topic ?? result?.explanation?.title ?? "").toLowerCase();
+    return BONUS_INSIGHTS[topic] ?? [];
   }, [result]);
 
   const loadingPlan = useMemo(() => {
@@ -432,6 +439,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                     ? "oceanWaves"
                     : undefined
               }
+              bonusInsights={bonusInsights}
             />
           </div>
 

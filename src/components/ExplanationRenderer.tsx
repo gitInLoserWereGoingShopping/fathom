@@ -13,10 +13,12 @@ export function ExplanationRenderer({
   blocks,
   showUnknown = false,
   vignetteKind,
+  bonusInsights = [],
 }: {
   blocks: ExplanationBlock[];
   showUnknown?: boolean;
   vignetteKind?: "volcano" | "oceanWaves";
+  bonusInsights?: string[];
 }) {
   function cleanStepText(input: string) {
     return input.replace(/^\s*(step\s*)?\d+[\).\-\:]\s*/i, "");
@@ -105,6 +107,16 @@ export function ExplanationRenderer({
             );
         }
       })}
+      {bonusInsights.length > 0 ? (
+        <section className="bonus-card">
+          <h3>Bonus insights</h3>
+          <ul>
+            {bonusInsights.map((insight) => (
+              <li key={insight}>{insight}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
