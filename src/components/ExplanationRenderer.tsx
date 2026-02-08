@@ -1,6 +1,7 @@
 "use client";
 
 import type { ExplanationBlock } from "@/lib/schema";
+import { TopicVignette } from "@/components/TopicVignette";
 
 const toneStyles: Record<string, string> = {
   tip: "callout tip",
@@ -11,9 +12,11 @@ const toneStyles: Record<string, string> = {
 export function ExplanationRenderer({
   blocks,
   showUnknown = false,
+  vignetteKind,
 }: {
   blocks: ExplanationBlock[];
   showUnknown?: boolean;
+  vignetteKind?: "volcano" | "oceanWaves";
 }) {
   function cleanStepText(input: string) {
     return input.replace(/^\s*(step\s*)?\d+[\).\-\:]\s*/i, "");
@@ -24,6 +27,14 @@ export function ExplanationRenderer({
       {blocks.map((block, index) => {
         switch (block.type) {
           case "heading":
+            if (index === 0 && vignetteKind) {
+              return (
+                <div key={index} className="heading-with-vignette">
+                  <h3>{block.text}</h3>
+                  <TopicVignette kind={vignetteKind} />
+                </div>
+              );
+            }
             return <h3 key={index}>{block.text}</h3>;
           case "paragraph":
             return <p key={index}>{block.text}</p>;

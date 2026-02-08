@@ -21,7 +21,9 @@ export default function Home() {
           <div className="how-it-works">
             <p className="subhead">Ask a question in your own words.</p>
             <p className="subhead">Choose the depth that fits your moment.</p>
-            <p className="subhead">Explore related ideas and revisit concepts.</p>
+            <p className="subhead">
+              Explore related ideas and revisit concepts.
+            </p>
           </div>
         </div>
       </header>

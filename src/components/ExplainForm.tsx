@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Explanation, ExplanationLevel } from "@/lib/schema";
 import { ExplanationRenderer } from "@/components/ExplanationRenderer";
 import { classifyDomain, DOMAIN_DEFINITIONS } from "@/lib/domains";
@@ -22,6 +22,8 @@ type ExplainResponse = {
 };
 
 export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
+  const formRef = useRef<HTMLElement | null>(null);
+  const answerRef = useRef<HTMLElement | null>(null);
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState<ExplanationLevel>("eli10");
   const [loading, setLoading] = useState(false);
@@ -55,9 +57,8 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
   }, [result]);
 
   const loadingPlan = useMemo(() => {
-    const lower = query.toLowerCase();
-    if (/(space|cosmic|galaxy|universe|star|planet|black hole)/i.test(lower)) {
-      return {
+    const plans: Record<string, { label: string; steps: string[] }> = {
+      space: {
         label: "Cosmic inquiry",
         steps: [
           "Consulting star charts",
@@ -65,32 +66,8 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           "Mapping the big picture",
           "Translating to human terms",
         ],
-      };
-    }
-    if (/(brain|mind|memory|neuron|behavior|psych)/i.test(lower)) {
-      return {
-        label: "Mind lab",
-        steps: [
-          "Scanning mental models",
-          "Finding the main pathway",
-          "Checking for clean analogies",
-          "Packaging it for clarity",
-        ],
-      };
-    }
-    if (/(energy|electric|current|circuit|charge|magnet)/i.test(lower)) {
-      return {
-        label: "Physics bench",
-        steps: [
-          "Warming up the circuits",
-          "Tracking the flow",
-          "Simplifying the core forces",
-          "Building a clear story",
-        ],
-      };
-    }
-    if (/(cell|dna|protein|gene|evolution|biology|body)/i.test(lower)) {
-      return {
+      },
+      nature: {
         label: "Bio sketch",
         steps: [
           "Zooming into the system",
@@ -98,18 +75,93 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           "Building the sequence",
           "Summarizing the takeaway",
         ],
-      };
-    }
-    return {
-      label: "Learning flow",
-      steps: [
-        "Clarifying the question",
-        "Gathering the intuition",
-        "Structuring the answer",
-        "Polishing for your level",
-      ],
+      },
+      physics: {
+        label: "Physics bench",
+        steps: [
+          "Warming up the models",
+          "Tracking the forces",
+          "Simplifying the core rules",
+          "Building a clear story",
+        ],
+      },
+      chemistry: {
+        label: "Chem lab",
+        steps: [
+          "Identifying key particles",
+          "Mapping the reaction path",
+          "Balancing the changes",
+          "Summarizing the result",
+        ],
+      },
+      earth: {
+        label: "Earth systems",
+        steps: [
+          "Reading the terrain",
+          "Tracing cycles and flows",
+          "Connecting causes and effects",
+          "Turning it into a clear story",
+        ],
+      },
+      ocean: {
+        label: "Ocean currents",
+        steps: [
+          "Measuring the tides",
+          "Tracking the flow paths",
+          "Connecting heat and motion",
+          "Packaging the insights",
+        ],
+      },
+      mind: {
+        label: "Mind lab",
+        steps: [
+          "Scanning mental models",
+          "Finding the main pathway",
+          "Checking for clean analogies",
+          "Packaging it for clarity",
+        ],
+      },
+      engineering: {
+        label: "Design studio",
+        steps: [
+          "Defining the constraints",
+          "Mapping the mechanisms",
+          "Testing the tradeoffs",
+          "Finalizing the explanation",
+        ],
+      },
+      computing: {
+        label: "Compute core",
+        steps: [
+          "Parsing the inputs",
+          "Tracing the algorithm",
+          "Simplifying the logic",
+          "Delivering the output",
+        ],
+      },
+      math: {
+        label: "Pattern lab",
+        steps: [
+          "Spotting the structure",
+          "Choosing the right tools",
+          "Checking the relationships",
+          "Explaining the pattern",
+        ],
+      },
     };
-  }, [query]);
+
+    return (
+      plans[activeTheme] ?? {
+        label: "Learning flow",
+        steps: [
+          "Clarifying the question",
+          "Gathering the intuition",
+          "Structuring the answer",
+          "Polishing for your level",
+        ],
+      }
+    );
+  }, [activeTheme]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -142,10 +194,17 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     return () => window.clearInterval(interval);
   }, [loading, loadingPlan.steps.length]);
 
+  useEffect(() => {
+    if (loading || !result?.explanation) return;
+    const timer = window.setTimeout(() => scrollToAnswer(), 300);
+    return () => window.clearTimeout(timer);
+  }, [loading, result?.explanation]);
+
   async function handleSubmit(
     mode: "default" | "new_variant" = "default",
     nextQuery?: string,
   ) {
+    const startedAt = Date.now();
     setLoading(true);
     setError(null);
     setSignalSelection(null);
@@ -168,6 +227,12 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       setResult(null);
     } else {
       setResult(data);
+    }
+
+    const minDelayMs = 4000;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < minDelayMs) {
+      await new Promise((resolve) => setTimeout(resolve, minDelayMs - elapsed));
     }
 
     setLoading(false);
@@ -239,14 +304,24 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     }
   }
 
-  function scrollToTop() {
-    if (typeof window === "undefined") return;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  function scrollToForm() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToAnswer() {
+    answerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleDomainTopicClick(domainId: string, topic: string) {
+    setQuery(topic);
+    setActiveTheme(domainId);
+    scrollToForm();
+    handleSubmit("default", topic);
   }
 
   return (
     <div className="stack">
-      <section className="card">
+      <section className="card" ref={formRef}>
         <label className="label" htmlFor="query">
           I&apos;m interested in learning more about…
         </label>
@@ -340,11 +415,24 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       ) : null}
 
       {result?.explanation && !loading ? (
-        <section className="stack">
-          <div className="card">
+        <section className="stack" ref={answerRef}>
+          <div className="card answer-card">
             <h2>{result.explanation.title}</h2>
             <p className="muted">{result.explanation.summary}</p>
-            <ExplanationRenderer blocks={result.explanation.blocks} />
+            <ExplanationRenderer
+              blocks={result.explanation.blocks}
+              vignetteKind={
+                /(volcano|volcanoes)/i.test(
+                  result.explanation.topic ?? result.explanation.title,
+                )
+                  ? "volcano"
+                  : /(waves and energy)/i.test(
+                        result.explanation.topic ?? result.explanation.title,
+                      )
+                    ? "oceanWaves"
+                    : undefined
+              }
+            />
           </div>
 
           <div className="card">
@@ -437,14 +525,14 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       {relatedTopics.length > 0 ? (
         <section className="card">
           <h3>Explore related ideas</h3>
-          <div className="tag-list">
+          <div className="tag-list-explore-related">
             {relatedTopics.map((topic) => (
               <button
                 key={topic}
                 className="tag"
                 onClick={() => {
                   setQuery(topic);
-                  scrollToTop();
+                  scrollToForm();
                   handleSubmit("default", topic);
                 }}
               >
@@ -457,14 +545,14 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
 
       <section className="card">
         <h3>Seed topics</h3>
-        <div className="tag-list">
+        <div className="tag-list-seed-topics">
           {seedTopics.map((topic) => (
             <button
               key={topic}
               className="tag"
               onClick={() => {
                 setQuery(topic);
-                scrollToTop();
+                scrollToForm();
                 handleSubmit("default", topic);
               }}
             >
@@ -489,9 +577,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                     key={topic}
                     className="tag"
                     onClick={() => {
-                      setQuery(topic);
-                      scrollToTop();
-                      handleSubmit("default", topic);
+                      handleDomainTopicClick(domain.id, topic);
                     }}
                   >
                     {topic}

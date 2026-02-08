@@ -385,6 +385,11 @@ a {
   box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
 }
 
+.answer-card {
+  position: relative;
+  overflow: visible;
+}
+
 .loading-card {
   position: relative;
   overflow: hidden;
@@ -619,10 +624,11 @@ a {
 
 .blocks h3,
 .card > h3 {
-  display: inline-flex;
+  /* display: inline-flex; */
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
+  padding-right: 14px;
   border-radius: 999px;
   border: 1px solid var(--accent);
   background: var(--accent-soft);
@@ -700,6 +706,12 @@ a {
 }
 
 .tag-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tag-list-seed-topics,
+.tag-list-explore-related {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -802,4 +814,161 @@ a {
   word-break: break-word;
   font-size: 0.85rem;
   margin-top: 12px;
+}
+
+/* Vignette styles */
+.topic-vignette {
+  position: absolute;
+  top: -35px;
+  left: 190px;
+  width: 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 10px 20px rgba(2, 6, 23, 0.5));
+  pointer-events: none;
+}
+
+.heading-with-vignette {
+  position: relative;
+  display: inline-block;
+}
+
+.wave-vignette {
+  width: 200px;
+  height: 60px;
+  left: -17px;
+  top: -17px;
+}
+
+.wave-vignette svg {
+  width: 100%;
+  height: 100%;
+}
+
+.wave-line {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.9);
+  stroke-width: 4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 6px 12px rgba(14, 165, 233, 0.35));
+}
+
+.wave-2 {
+  stroke: rgba(14, 165, 233, 0.6);
+  stroke-width: 3;
+}
+
+.wave-line {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 0;
+  animation: wave-flow 5s ease-in-out infinite alternate;
+}
+
+.wave-2 {
+  animation-delay: 0.6s;
+}
+
+.topic-vignette svg {
+  width: 100%;
+  height: 100%;
+}
+
+.lava-flow {
+  opacity: 0;
+  animation: lava-flow 6s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.lava-burst {
+  fill: #fb7185;
+  opacity: 0;
+  transform-origin: center;
+  animation: lava-burst 6s ease-in-out infinite;
+  animation-delay: 2.2s;
+}
+
+.lava-2 {
+  animation-delay: 2.4s;
+}
+
+.lava-3 {
+  animation-delay: 2.6s;
+}
+
+.ash {
+  fill: rgba(226, 232, 240, 0.7);
+  opacity: 0;
+  animation: ash-float 6s ease-in-out infinite;
+  animation-delay: 2.4s;
+}
+
+.ash-2 {
+  animation-delay: 2.8s;
+}
+
+/* Vignette animation keyframes */
+@keyframes lava-flow {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  45%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes lava-burst {
+  0%,
+  35% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(-12px) scale(1.1);
+  }
+  60% {
+    opacity: 0.6;
+    transform: translateY(-18px) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.6);
+  }
+}
+
+@keyframes ash-float {
+  0%,
+  40% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  55% {
+    opacity: 0.7;
+    transform: translateY(-8px) scale(1);
+  }
+  80% {
+    opacity: 0.3;
+    transform: translateY(-16px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.9);
+  }
+}
+
+@keyframes wave-flow {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0.7;
+  }
+  100% {
+    stroke-dashoffset: -240;
+    opacity: 0.7;
+  }
 }
