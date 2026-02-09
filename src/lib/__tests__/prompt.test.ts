@@ -9,7 +9,8 @@ describe("buildPrompt", () => {
       variantHint: "Use a fresh metaphor.",
     });
 
-    expect(prompt.userPrompt).toContain("Topic: electricity flow");
+    expect(prompt.userPrompt).toContain("<BEGIN_TOPIC>");
+    expect(prompt.userPrompt).toContain("electricity flow");
     expect(prompt.userPrompt).toContain("Level: eli10");
     expect(prompt.userPrompt).toContain(
       "Variation hint: Use a fresh metaphor.",

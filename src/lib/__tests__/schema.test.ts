@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ExplanationSchema, ExplainRequestSchema } from "@/lib/schema";
+import { MAX_QUERY_CHARS } from "@/lib/limits";
 
 describe("ExplanationSchema", () => {
   it("validates a well-formed explanation", () => {
@@ -67,6 +68,24 @@ describe("ExplainRequestSchema", () => {
 
   it("rejects missing query", () => {
     const result = ExplainRequestSchema.safeParse({
+      level: "eli10",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects overly long queries", () => {
+    const result = ExplainRequestSchema.safeParse({
+      query: "a".repeat(MAX_QUERY_CHARS + 1),
+      level: "eli10",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects queries with control characters", () => {
+    const result = ExplainRequestSchema.safeParse({
+      query: "Why does it rain?\u0000",
       level: "eli10",
     });
 

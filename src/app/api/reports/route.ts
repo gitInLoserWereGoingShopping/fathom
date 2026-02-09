@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getClientIp } from "@/lib/request";
 
 const ReportSchema = z.object({
   explanationId: z.string().min(1),
   variantId: z.string().min(1).optional(),
   reason: z.string().min(8).max(1000),
 });
-
-function getClientIp(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0]?.trim();
-  }
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);

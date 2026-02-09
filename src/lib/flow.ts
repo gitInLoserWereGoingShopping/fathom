@@ -7,6 +7,7 @@ import {
 } from "@/lib/schema";
 import { buildPrompt, STRUCTURE_VERSION } from "@/lib/prompt";
 import { callOpenAI } from "@/lib/openai";
+import { sanitizeQuery } from "@/lib/query";
 
 export type FlowMode = "default" | "new_variant";
 export type FlowStatus = "success" | "retrieved" | "failed";
@@ -155,14 +156,15 @@ export async function runFlow(params: {
   forceGenerate?: boolean;
 }) {
   const mode = params.mode ?? "default";
+  const sanitizedQuery = sanitizeQuery(params.rawQuery);
   const trace: FlowTrace = {
     input: {
-      rawQuery: params.rawQuery,
+      rawQuery: sanitizedQuery,
       level: params.level,
       mode,
     },
     canonicalise: {
-      input: params.rawQuery,
+      input: sanitizedQuery,
       canonicalTopic: "",
       canonicalKey: "",
       groupKey: "",
@@ -175,7 +177,7 @@ export async function runFlow(params: {
   };
 
   try {
-    const { canonicalTopic, canonicalKey } = canonicalize(params.rawQuery);
+    const { canonicalTopic, canonicalKey } = canonicalize(sanitizedQuery);
     const groupKey = buildGroupKey(
       canonicalTopic,
       params.level,
@@ -411,4 +413,45 @@ export async function runFlow(params: {
         "Something went wrong while generating the explanation. Please try again in a moment.",
     } satisfies FlowResult;
   }
+}
+
+export async function checkExplainCache(params: {
+  rawQuery: string;
+  level: ExplanationLevel;
+}) {
+  const sanitizedQuery = sanitizeQuery(params.rawQuery);
+  const { canonicalTopic } = canonicalize(sanitizedQuery);
+  const groupKey = buildGroupKey(canonicalTopic, params.level, STRUCTURE_VERSION);
+
+  const publicExplanation = await prisma.explanation.findFirst({
+    where: {
+      groupKey,
+      level: params.level,
+      visibility: "public",
+    },
+    select: { id: true },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  if (publicExplanation) {
+    return true;
+  }
+
+  const existingExplanation = await prisma.explanation.findFirst({
+    where: {
+      groupKey,
+      level: params.level,
+      visibility: {
+        not: "blocked",
+      },
+    },
+    select: { id: true },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  return Boolean(existingExplanation);
 }

@@ -1,3 +1,5 @@
+import { sanitizeQuery } from "@/lib/query";
+
 const CLEANUP_PREFIXES = [
   "i'm interested in learning more about",
   "i am interested in learning more about",
@@ -8,9 +10,7 @@ const CLEANUP_PREFIXES = [
 ];
 
 export function canonicalize(rawQuery: string) {
-  const normalized = rawQuery
-    .trim()
-    .replace(/\s+/g, " ")
+  const normalized = sanitizeQuery(rawQuery)
     .replace(/[?.!]+$/, "")
     .toLowerCase();
 
