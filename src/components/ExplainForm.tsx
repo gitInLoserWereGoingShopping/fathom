@@ -383,8 +383,11 @@ export function ExplainForm() {
   ) {
     setQuery(topic);
     setActiveTheme(domainId);
+    if (nextLevel) {
+      setLevel(nextLevel);
+    }
     scrollToForm();
-    handleSubmit(nextLevel ?? "default", topic);
+    handleSubmit("default", topic);
   }
 
 
