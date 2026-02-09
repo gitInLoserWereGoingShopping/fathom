@@ -1,3 +1,5 @@
+import { getResponseTokenLimit } from "@/lib/openai-limits";
+
 type OpenAIResponse = {
   choices?: Array<{ message?: { content?: string } }>;
   error?: { message?: string };
@@ -22,6 +24,8 @@ export async function callOpenAI(params: {
     body: JSON.stringify({
       model: params.model ?? "gpt-4o-mini",
       temperature: 0.7,
+      max_tokens: getResponseTokenLimit(),
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: params.systemPrompt },
         { role: "user", content: params.userPrompt },

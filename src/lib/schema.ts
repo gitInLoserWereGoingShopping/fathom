@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { MAX_QUERY_CHARS } from "@/lib/limits";
+import { hasControlChars } from "@/lib/query";
 
 export const ExplanationLevelSchema = z.enum(["eli5", "eli10", "expert"]);
 
@@ -61,7 +63,14 @@ export type ExplanationBlock = z.infer<typeof ExplanationBlockSchema>;
 export type Explanation = z.infer<typeof ExplanationSchema>;
 
 export const ExplainRequestSchema = z.object({
-  query: z.string().min(2),
+  query: z
+    .string()
+    .trim()
+    .min(2)
+    .max(MAX_QUERY_CHARS)
+    .refine((value) => !hasControlChars(value), {
+      message: "Query contains invalid characters.",
+    }),
   level: ExplanationLevelSchema,
   mode: z.enum(["default", "new_variant"]).optional(),
 });

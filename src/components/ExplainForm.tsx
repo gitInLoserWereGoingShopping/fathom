@@ -9,6 +9,7 @@ import {
   type DomainId,
 } from "@/lib/domains";
 import { BONUS_INSIGHTS } from "@/lib/bonus-insights";
+import { MAX_QUERY_CHARS } from "@/lib/limits";
 
 const levelDescriptions: Record<ExplanationLevel, string> = {
   eli5: "Very accessible, concrete, metaphor-friendly.",
@@ -24,6 +25,7 @@ type ExplainResponse = {
   explanationId?: string;
   variantId?: string;
   message?: string;
+  limitScope?: "cached" | "generate";
 };
 
 export function ExplainForm() {
@@ -45,6 +47,8 @@ export function ExplainForm() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
+  const [generationLimited, setGenerationLimited] = useState(false);
   const [reportStatus, setReportStatus] = useState<
     "idle" | "sending" | "sent" | "error" | "limited"
   >("idle");
@@ -274,8 +278,8 @@ export function ExplainForm() {
     themeOverride?: DomainId,
   ) {
     const startedAt = Date.now();
-    setLoading(true);
     setError(null);
+    setRateLimitMessage(null);
     setSignalSelection(null);
     setSignalStatus("idle");
     setReportStatus("idle");
@@ -284,23 +288,51 @@ export function ExplainForm() {
     setReportReason("");
     setActiveTheme(themeOverride ?? classifyDomain(nextQuery ?? query));
     const queryValue = nextQuery ?? query;
-    const response = await fetch("/api/explain", {
+    let loadingTimer: number | null = null;
+    let loadingShown = false;
+    loadingTimer = window.setTimeout(() => {
+      setLoading(true);
+      loadingShown = true;
+    }, 150);
+    const forceLimit =
+      typeof window !== "undefined" &&
+      window.localStorage.getItem("fathom_force_limit") === "1";
+    const endpoint = forceLimit ? "/api/explain?forceLimit=1" : "/api/explain";
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: queryValue, level, mode }),
     });
 
-    const data = (await response.json()) as ExplainResponse;
-    if (!response.ok || data.status === "failed") {
+    if (loadingTimer !== null) {
+      window.clearTimeout(loadingTimer);
+    }
+
+    const data = (await response.json().catch(() => ({}))) as ExplainResponse;
+    if (response.status === 429) {
+      setRateLimitMessage(
+        data.message ?? "Too many requests. Please try again shortly.",
+      );
+      setError(null);
+      setResult(null);
+      if (data.limitScope === "generate") {
+        setGenerationLimited(true);
+      }
+      setLoading(false);
+      return;
+    } else if (!response.ok || data.status === "failed") {
       setError(data.message ?? "Something went wrong.");
       setResult(null);
     } else {
       setResult(data);
+      if (data.cacheHit === false) {
+        setGenerationLimited(false);
+      }
     }
 
     const minDelayMs = 4000;
     const elapsed = Date.now() - startedAt;
-    if (elapsed < minDelayMs) {
+    if (loadingShown && elapsed < minDelayMs) {
       await new Promise((resolve) => setTimeout(resolve, minDelayMs - elapsed));
     }
 
@@ -395,8 +427,6 @@ export function ExplainForm() {
     handleSubmit("default", topic, domainId as DomainId);
   }
 
-
-
   return (
     <div className="stack">
       <section className="card" ref={formRef}>
@@ -410,6 +440,7 @@ export function ExplainForm() {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="e.g. How does electricity flow?"
           rows={3}
+          maxLength={MAX_QUERY_CHARS}
         />
         <div className="levels">
           {(["eli5", "eli10", "expert"] as ExplanationLevel[]).map((value) => (
@@ -445,7 +476,7 @@ export function ExplainForm() {
               "Explain"
             )}
           </button>
-          {result?.explanation ? (
+          {result?.explanation && !rateLimitMessage && !generationLimited ? (
             <button
               className="btn secondary"
               onClick={() => handleSubmit("new_variant")}
@@ -453,6 +484,15 @@ export function ExplainForm() {
             >
               Generate another explanation
             </button>
+          ) : null}
+          {rateLimitMessage ? (
+            <div className="rate-banner show" role="status" aria-live="polite">
+              <span className="rate-title">🎉Daily question limit reached</span>
+              <span className="rate-body">
+                You are a curious one! Come back tomorrow with more questions.
+                You can still explore answered domain topics below.
+              </span>
+            </div>
           ) : null}
         </div>
         {error ? <p className="error-text">{error}</p> : null}

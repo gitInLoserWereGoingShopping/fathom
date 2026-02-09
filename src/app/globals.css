@@ -558,9 +558,50 @@ a {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 16px;
+  align-items: center;
+}
+
+.rate-banner {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecdd3;
+  font-size: 0.85rem;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(18px);
+  overflow: hidden;
+  flex: 1 1 100%;
+  order: 2;
+  transition:
+    max-width 0.35s ease,
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.rate-banner.show {
+  max-width: 100%;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rate-title {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rate-body {
+  color: #fecdd3;
+  opacity: 0.9;
 }
 
 .btn {
+  flex: 0 0 auto;
   border: none;
   background: linear-gradient(135deg, var(--accent), var(--accent-alt));
   color: #fff;
