@@ -23,7 +23,7 @@ export function computeMaxTokensFromExamples(examples: unknown) {
     return DEFAULT_MAX_TOKENS;
   }
 
-  const maxChars = entries.reduce((currentMax, entry) => {
+  const maxChars = entries.reduce<number>((currentMax, entry) => {
     const length = JSON.stringify(entry).length;
     return Math.max(currentMax, length);
   }, 0);
