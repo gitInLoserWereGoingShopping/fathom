@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Explanation, ExplanationLevel } from "@/lib/schema";
 import { ExplanationRenderer } from "@/components/ExplanationRenderer";
-import { classifyDomain, DOMAIN_DEFINITIONS } from "@/lib/domains";
+import {
+  classifyDomain,
+  DOMAIN_DEFINITIONS,
+  type DomainId,
+} from "@/lib/domains";
 import { BONUS_INSIGHTS } from "@/lib/bonus-insights";
 
 const levelDescriptions: Record<ExplanationLevel, string> = {
@@ -267,6 +271,7 @@ export function ExplainForm() {
   async function handleSubmit(
     mode: "default" | "new_variant" = "default",
     nextQuery?: string,
+    themeOverride?: DomainId,
   ) {
     const startedAt = Date.now();
     setLoading(true);
@@ -277,7 +282,7 @@ export function ExplainForm() {
     setReportMessage(null);
     setReportOpen(false);
     setReportReason("");
-    setActiveTheme(classifyDomain(nextQuery ?? query));
+    setActiveTheme(themeOverride ?? classifyDomain(nextQuery ?? query));
     const queryValue = nextQuery ?? query;
     const response = await fetch("/api/explain", {
       method: "POST",
@@ -387,7 +392,7 @@ export function ExplainForm() {
       setLevel(nextLevel);
     }
     scrollToForm();
-    handleSubmit("default", topic);
+    handleSubmit("default", topic, domainId as DomainId);
   }
 
 
