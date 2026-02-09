@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Explanation, ExplanationLevel } from "@/lib/schema";
 import { ExplanationRenderer } from "@/components/ExplanationRenderer";
-import { classifyDomain, DOMAIN_DEFINITIONS } from "@/lib/domains";
+import {
+  classifyDomain,
+  DOMAIN_DEFINITIONS,
+  type DomainId,
+} from "@/lib/domains";
+import { BONUS_INSIGHTS } from "@/lib/bonus-insights";
 
 const levelDescriptions: Record<ExplanationLevel, string> = {
   eli5: "Very accessible, concrete, metaphor-friendly.",
@@ -21,7 +26,9 @@ type ExplainResponse = {
   message?: string;
 };
 
-export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
+export function ExplainForm() {
+  const formRef = useRef<HTMLElement | null>(null);
+  const answerRef = useRef<HTMLElement | null>(null);
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState<ExplanationLevel>("eli10");
   const [loading, setLoading] = useState(false);
@@ -36,6 +43,12 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     "idle" | "sending" | "sent" | "error"
   >("idle");
   const [loadingStep, setLoadingStep] = useState(0);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportStatus, setReportStatus] = useState<
+    "idle" | "sending" | "sent" | "error" | "limited"
+  >("idle");
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -48,10 +61,72 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     return result?.explanation?.relatedTopics ?? [];
   }, [result]);
 
+  const moreToExplore = useMemo(() => {
+    const fallbackQuestions = [
+      "Why do patterns appear in nature and math?",
+      "How does energy move through systems?",
+      "Why do small changes sometimes cause big effects?",
+      "What makes a good model of a complex system?",
+      "How do we measure things we can’t see directly?",
+    ];
+
+    if (!result?.explanation) {
+      const perDomain = DOMAIN_DEFINITIONS.map((domain) => domain.questions[0]);
+      return [...perDomain, ...fallbackQuestions].slice(0, 15);
+    }
+
+    const topic = result.explanation.topic ?? result.explanation.title ?? "";
+    const normalized = topic.toLowerCase();
+    const domainMatch = DOMAIN_DEFINITIONS.find((domain) =>
+      domain.topics.some((t) => t.toLowerCase() === normalized),
+    );
+    const domain =
+      domainMatch ??
+      DOMAIN_DEFINITIONS.find((entry) => entry.id === classifyDomain(topic));
+    const domainQuestions = domain?.questions ?? [];
+    const relatedQuestion =
+      relatedTopics.length >= 3
+        ? [
+            `How do ${relatedTopics[0]}, ${relatedTopics[1]}, and ${relatedTopics[2]} relate to each other?`,
+            `What connects ${relatedTopics[0]}, ${relatedTopics[1]}, and ${relatedTopics[2]}?`,
+            `How do ${relatedTopics[0]} and ${relatedTopics[1]} shape ${relatedTopics[2]}?`,
+          ]
+        : relatedTopics.length === 2
+          ? [
+              `How do ${relatedTopics[0]} and ${relatedTopics[1]} relate to each other?`,
+              `What do ${relatedTopics[0]} and ${relatedTopics[1]} have in common?`,
+              `How does ${relatedTopics[0]} influence ${relatedTopics[1]}?`,
+            ]
+          : relatedTopics.length === 1
+            ? [
+                `How does ${relatedTopics[0]} connect to this topic?`,
+                `Why is ${relatedTopics[0]} important here?`,
+                `How can ${relatedTopics[0]} help explain this?`,
+              ]
+            : undefined;
+    const pickRelated =
+      relatedQuestion && relatedQuestion.length > 0
+        ? relatedQuestion[Math.floor(Math.random() * relatedQuestion.length)]
+        : undefined;
+    const combined = [
+      ...domainQuestions,
+      ...(pickRelated ? [pickRelated] : []),
+    ];
+    return Array.from(new Set(combined)).slice(0, 10);
+  }, [result, relatedTopics]);
+
+  const bonusInsights = useMemo(() => {
+    const topic = (
+      result?.explanation?.topic ??
+      result?.explanation?.title ??
+      ""
+    ).toLowerCase();
+    return BONUS_INSIGHTS[topic] ?? [];
+  }, [result]);
+
   const loadingPlan = useMemo(() => {
-    const lower = query.toLowerCase();
-    if (/(space|cosmic|galaxy|universe|star|planet|black hole)/i.test(lower)) {
-      return {
+    const plans: Record<string, { label: string; steps: string[] }> = {
+      space: {
         label: "Cosmic inquiry",
         steps: [
           "Consulting star charts",
@@ -59,32 +134,8 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           "Mapping the big picture",
           "Translating to human terms",
         ],
-      };
-    }
-    if (/(brain|mind|memory|neuron|behavior|psych)/i.test(lower)) {
-      return {
-        label: "Mind lab",
-        steps: [
-          "Scanning mental models",
-          "Finding the main pathway",
-          "Checking for clean analogies",
-          "Packaging it for clarity",
-        ],
-      };
-    }
-    if (/(energy|electric|current|circuit|charge|magnet)/i.test(lower)) {
-      return {
-        label: "Physics bench",
-        steps: [
-          "Warming up the circuits",
-          "Tracking the flow",
-          "Simplifying the core forces",
-          "Building a clear story",
-        ],
-      };
-    }
-    if (/(cell|dna|protein|gene|evolution|biology|body)/i.test(lower)) {
-      return {
+      },
+      nature: {
         label: "Bio sketch",
         steps: [
           "Zooming into the system",
@@ -92,18 +143,93 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           "Building the sequence",
           "Summarizing the takeaway",
         ],
-      };
-    }
-    return {
-      label: "Learning flow",
-      steps: [
-        "Clarifying the question",
-        "Gathering the intuition",
-        "Structuring the answer",
-        "Polishing for your level",
-      ],
+      },
+      physics: {
+        label: "Physics bench",
+        steps: [
+          "Warming up the models",
+          "Tracking the forces",
+          "Simplifying the core rules",
+          "Building a clear story",
+        ],
+      },
+      chemistry: {
+        label: "Chem lab",
+        steps: [
+          "Identifying key particles",
+          "Mapping the reaction path",
+          "Balancing the changes",
+          "Summarizing the result",
+        ],
+      },
+      earth: {
+        label: "Earth systems",
+        steps: [
+          "Reading the terrain",
+          "Tracing cycles and flows",
+          "Connecting causes and effects",
+          "Turning it into a clear story",
+        ],
+      },
+      ocean: {
+        label: "Ocean currents",
+        steps: [
+          "Measuring the tides",
+          "Tracking the flow paths",
+          "Connecting heat and motion",
+          "Packaging the insights",
+        ],
+      },
+      mind: {
+        label: "Mind lab",
+        steps: [
+          "Scanning mental models",
+          "Finding the main pathway",
+          "Checking for clean analogies",
+          "Packaging it for clarity",
+        ],
+      },
+      engineering: {
+        label: "Design studio",
+        steps: [
+          "Defining the constraints",
+          "Mapping the mechanisms",
+          "Testing the tradeoffs",
+          "Finalizing the explanation",
+        ],
+      },
+      computing: {
+        label: "Compute core",
+        steps: [
+          "Parsing the inputs",
+          "Tracing the algorithm",
+          "Simplifying the logic",
+          "Delivering the output",
+        ],
+      },
+      math: {
+        label: "Pattern lab",
+        steps: [
+          "Spotting the structure",
+          "Choosing the right tools",
+          "Checking the relationships",
+          "Explaining the pattern",
+        ],
+      },
     };
-  }, [query]);
+
+    return (
+      plans[activeTheme] ?? {
+        label: "Learning flow",
+        steps: [
+          "Clarifying the question",
+          "Gathering the intuition",
+          "Structuring the answer",
+          "Polishing for your level",
+        ],
+      }
+    );
+  }, [activeTheme]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -136,15 +262,27 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     return () => window.clearInterval(interval);
   }, [loading, loadingPlan.steps.length]);
 
+  useEffect(() => {
+    if (loading || !result?.explanation) return;
+    const timer = window.setTimeout(() => scrollToAnswer(), 300);
+    return () => window.clearTimeout(timer);
+  }, [loading, result?.explanation]);
+
   async function handleSubmit(
     mode: "default" | "new_variant" = "default",
     nextQuery?: string,
+    themeOverride?: DomainId,
   ) {
+    const startedAt = Date.now();
     setLoading(true);
     setError(null);
     setSignalSelection(null);
     setSignalStatus("idle");
-    setActiveTheme(classifyDomain(nextQuery ?? query));
+    setReportStatus("idle");
+    setReportMessage(null);
+    setReportOpen(false);
+    setReportReason("");
+    setActiveTheme(themeOverride ?? classifyDomain(nextQuery ?? query));
     const queryValue = nextQuery ?? query;
     const response = await fetch("/api/explain", {
       method: "POST",
@@ -160,10 +298,16 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       setResult(data);
     }
 
+    const minDelayMs = 4000;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < minDelayMs) {
+      await new Promise((resolve) => setTimeout(resolve, minDelayMs - elapsed));
+    }
+
     setLoading(false);
   }
 
-  async function sendSignal(signalType: "helpful" | "tooComplex" | "branched") {
+  async function sendSignal(signalType: "helpful" | "tooComplex") {
     if (!result?.explanationId) return;
     setSignalStatus("sending");
     try {
@@ -186,15 +330,76 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
     }
   }
 
-  function handleSignalClick(signalType: "helpful" | "tooComplex" | "branched") {
+  function handleSignalClick(signalType: "helpful" | "tooComplex") {
     if (signalSelection === signalType) return;
     setSignalSelection(signalType);
     void sendSignal(signalType);
   }
 
+  async function submitReport() {
+    if (!result?.explanationId) return;
+    if (reportReason.trim().length < 8) {
+      setReportStatus("error");
+      return;
+    }
+    setReportStatus("sending");
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          explanationId: result.explanationId,
+          variantId: result.variantId,
+          reason: reportReason.trim(),
+        }),
+      });
+      if (response.status === 429) {
+        setReportStatus("limited");
+        return;
+      }
+      if (!response.ok) {
+        setReportStatus("error");
+        return;
+      }
+      setReportStatus("sent");
+      setReportMessage(
+        "Thanks for flagging this. The response was hidden and sent for review.",
+      );
+      setResult(null);
+      setReportReason("");
+      setReportOpen(false);
+    } catch (error) {
+      setReportStatus("error");
+    }
+  }
+
+  function scrollToForm() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToAnswer() {
+    answerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleDomainTopicClick(
+    domainId: string,
+    topic: string,
+    nextLevel?: ExplanationLevel,
+  ) {
+    setQuery(topic);
+    setActiveTheme(domainId);
+    if (nextLevel) {
+      setLevel(nextLevel);
+    }
+    scrollToForm();
+    handleSubmit("default", topic, domainId as DomainId);
+  }
+
+
+
   return (
     <div className="stack">
-      <section className="card">
+      <section className="card" ref={formRef}>
         <label className="label" htmlFor="query">
           I&apos;m interested in learning more about…
         </label>
@@ -214,7 +419,13 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
               className={`pill ${level === value ? "active" : ""}`}
               onClick={() => setLevel(value)}
             >
-              <span className="pill-title">{value.toUpperCase()}</span>
+              <span className="pill-title">
+                {value === "eli5"
+                  ? "Explain Like I’m 5"
+                  : value === "eli10"
+                    ? "Explain Like I’m 10"
+                    : "Explain Like I'm an Expert"}
+              </span>
               <span className="pill-subtitle">{levelDescriptions[value]}</span>
             </button>
           ))}
@@ -245,14 +456,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
           ) : null}
         </div>
         {error ? <p className="error-text">{error}</p> : null}
-        {result ? (
-          <p className="muted">
-            {result.status === "retrieved"
-              ? "Retrieved from cache"
-              : "Generated fresh"}
-            {result.cacheHit ? " · cache hit" : ""}
-          </p>
-        ) : null}
+        {reportMessage ? <p className="muted">{reportMessage}</p> : null}
       </section>
 
       {loading ? (
@@ -265,8 +469,7 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
               </div>
               <h2>{loadingPlan.label}</h2>
               <p className="muted">
-                Crafting an explanation tailored to{" "}
-                {level.toUpperCase()} depth.
+                Crafting an explanation tailored to {level.toUpperCase()} depth.
               </p>
             </div>
           </div>
@@ -290,15 +493,29 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       ) : null}
 
       {result?.explanation && !loading ? (
-        <section className="stack">
-          <div className="card">
+        <section className="stack" ref={answerRef}>
+          <div className="card answer-card">
             <h2>{result.explanation.title}</h2>
             <p className="muted">{result.explanation.summary}</p>
-            <ExplanationRenderer blocks={result.explanation.blocks} />
+            <ExplanationRenderer
+              blocks={result.explanation.blocks}
+              vignetteKind={
+                /(volcano|volcanoes)/i.test(
+                  result.explanation.topic ?? result.explanation.title,
+                )
+                  ? "volcano"
+                  : /(waves and energy)/i.test(
+                        result.explanation.topic ?? result.explanation.title,
+                      )
+                    ? "oceanWaves"
+                    : undefined
+              }
+              bonusInsights={bonusInsights}
+            />
           </div>
 
           <div className="card">
-            <h3>Signals</h3>
+            <h3>Was this helpful?</h3>
             <div className="actions">
               <button
                 className="btn secondary"
@@ -326,33 +543,96 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
               </button>
               <button
                 className="btn secondary"
-                onClick={() => handleSignalClick("branched")}
-                disabled={
-                  !result.explanationId ||
-                  signalSelection === "branched" ||
-                  signalStatus === "sending"
-                }
+                onClick={() => setReportOpen(true)}
+                disabled={!result.explanationId || signalStatus === "sending"}
               >
-                {signalSelection === "branched" ? "Branched out ✓" : "Branched out"}
+                Report unsafe
               </button>
             </div>
             {signalStatus === "error" ? (
               <p className="error-text">Signal failed. Try again.</p>
             ) : null}
+            {reportOpen ? (
+              <div className="report-box">
+                <label className="label" htmlFor="report-reason">
+                  What felt unsafe?
+                </label>
+                <textarea
+                  id="report-reason"
+                  className="input"
+                  rows={3}
+                  placeholder="Describe the issue so we can review it."
+                  value={reportReason}
+                  onChange={(event) => setReportReason(event.target.value)}
+                />
+                <div className="actions">
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={submitReport}
+                    disabled={
+                      reportStatus === "sending" ||
+                      reportReason.trim().length < 8
+                    }
+                  >
+                    {reportStatus === "sending"
+                      ? "Sending..."
+                      : "Submit report"}
+                  </button>
+                  <button
+                    className="btn secondary"
+                    type="button"
+                    onClick={() => setReportOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {reportStatus === "limited" ? (
+                  <p className="error-text">
+                    You&apos;ve hit the daily limit. Try again tomorrow.
+                  </p>
+                ) : null}
+                {reportStatus === "error" ? (
+                  <p className="error-text">Report failed. Try again.</p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </section>
       ) : null}
 
-      {relatedTopics.length > 0 ? (
+      {result?.explanation && relatedTopics.length > 0 ? (
         <section className="card">
           <h3>Explore related ideas</h3>
-          <div className="tag-list">
+          <div className="tag-list-explore-related">
             {relatedTopics.map((topic) => (
               <button
                 key={topic}
                 className="tag"
                 onClick={() => {
                   setQuery(topic);
+                  scrollToForm();
+                  handleSubmit("default", topic);
+                }}
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {result?.explanation && moreToExplore.length > 0 ? (
+        <section className="card">
+          <h3>More to explore</h3>
+          <div className="tag-list-seed-topics">
+            {moreToExplore.map((topic) => (
+              <button
+                key={topic}
+                className="tag"
+                onClick={() => {
+                  setQuery(topic);
+                  scrollToForm();
                   handleSubmit("default", topic);
                 }}
               >
@@ -364,25 +644,29 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
       ) : null}
 
       <section className="card">
-        <h3>Seed topics</h3>
-        <div className="tag-list">
-      {seedTopics.map((topic) => (
-            <button
-              key={topic}
-              className="tag"
-              onClick={() => {
-                setQuery(topic);
-                handleSubmit("default", topic);
-              }}
-            >
-              {topic}
-            </button>
-          ))}
+        <div className="section-header-row">
+          <h3 className="domain-title">
+            <span>Explore by domain</span>
+            <div className="domain-levels inline">
+              {(["eli5", "eli10", "expert"] as ExplanationLevel[]).map(
+                (value) => (
+                  <button
+                    key={`domain-${value}`}
+                    type="button"
+                    className={`pill mini ${level === value ? "active" : ""}`}
+                    onClick={() => setLevel(value)}
+                  >
+                    {value === "eli5"
+                      ? "ELI-5"
+                      : value === "eli10"
+                        ? "ELI-10"
+                        : "ELI-Expert"}
+                  </button>
+                ),
+              )}
+            </div>
+          </h3>
         </div>
-      </section>
-
-      <section className="card">
-        <h3>Explore by domain</h3>
         <div className="domain-grid">
           {DOMAIN_DEFINITIONS.map((domain) => (
             <div key={domain.id} className="domain-card">
@@ -396,18 +680,54 @@ export function ExplainForm({ seedTopics }: { seedTopics: string[] }) {
                     key={topic}
                     className="tag"
                     onClick={() => {
-                      setQuery(topic);
-                      handleSubmit("default", topic);
+                      handleDomainTopicClick(domain.id, topic);
                     }}
                   >
                     {topic}
                   </button>
                 ))}
               </div>
+              <div className="domain-questions">
+                <p className="muted">Try a question</p>
+                <div className="tag-list">
+                  {domain.questions.map((question) => (
+                    <button
+                      key={question}
+                      className="tag"
+                      onClick={() =>
+                        handleDomainTopicClick(domain.id, question)
+                      }
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </section>
+
+      {!result?.explanation && moreToExplore.length > 0 ? (
+        <section className="card">
+          <h3>More to explore</h3>
+          <div className="tag-list-seed-topics">
+            {moreToExplore.map((topic) => (
+              <button
+                key={topic}
+                className="tag"
+                onClick={() => {
+                  setQuery(topic);
+                  scrollToForm();
+                  handleSubmit("default", topic);
+                }}
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

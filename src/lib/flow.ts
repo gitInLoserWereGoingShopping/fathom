@@ -208,6 +208,9 @@ export async function runFlow(params: {
         where: {
           groupKey,
           level: params.level,
+          visibility: {
+            not: "blocked",
+          },
         },
         orderBy: {
           updatedAt: "desc",

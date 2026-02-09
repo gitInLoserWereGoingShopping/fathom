@@ -19,6 +19,7 @@ model Explanation {
   updatedAt        DateTime            @updatedAt
   variants         ExplanationVariant[]
   signals          Signal[]
+  reports          Report[]
 
   @@index([groupKey, level])
   @@index([canonicalKey])
@@ -37,6 +38,7 @@ model ExplanationVariant {
 
   explanation  Explanation @relation(fields: [explanationId], references: [id])
   signals      Signal[]
+  reports      Report[]
 
   @@index([groupKey])
   @@index([explanationId])
@@ -69,4 +71,30 @@ model Signal {
 
   @@index([explanationId])
   @@index([variantId])
+}
+
+model Report {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  status        String   @default("open")
+  explanationId String
+  variantId     String?
+  reason        String
+  reporterIp    String?
+
+  explanation   Explanation @relation(fields: [explanationId], references: [id])
+  variant       ExplanationVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([explanationId])
+}
+
+model Feedback {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  message    String
+  reporterIp String?
+
+  @@index([createdAt])
 }

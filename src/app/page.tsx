@@ -1,5 +1,5 @@
 import { ExplainForm } from "@/components/ExplainForm";
-import { seedTopics } from "@/lib/seed-topics";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 export default function Home() {
   return (
@@ -13,16 +13,21 @@ export default function Home() {
           </p>
         </div>
         <div className="hero-card">
-          <h3>How it works</h3>
-          <ul>
-            <li>Ask a question in your own words.</li>
-            <li>Choose the depth that fits your moment.</li>
-            <li>Explore related ideas and revisit concepts.</li>
-          </ul>
+          <div className="hero-card-header">
+            <h3>How it works</h3>
+            <FeedbackWidget />
+          </div>
+          <div className="how-it-works">
+            <p className="subhead">Ask a question in your own words.</p>
+            <p className="subhead">Choose the depth that fits your moment.</p>
+            <p className="subhead">
+              Explore related ideas and revisit concepts.
+            </p>
+          </div>
         </div>
       </header>
 
-      <ExplainForm seedTopics={seedTopics} />
+      <ExplainForm />
     </div>
   );
 }
