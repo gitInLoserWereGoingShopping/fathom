@@ -67,9 +67,7 @@ export function ExplainForm() {
     ];
 
     if (!result?.explanation) {
-      const perDomain = DOMAIN_DEFINITIONS.map(
-        (domain) => domain.questions[0],
-      );
+      const perDomain = DOMAIN_DEFINITIONS.map((domain) => domain.questions[0]);
       return [...perDomain, ...fallbackQuestions].slice(0, 15);
     }
 
@@ -114,8 +112,11 @@ export function ExplainForm() {
   }, [result, relatedTopics]);
 
   const bonusInsights = useMemo(() => {
-    const topic =
-      (result?.explanation?.topic ?? result?.explanation?.title ?? "").toLowerCase();
+    const topic = (
+      result?.explanation?.topic ??
+      result?.explanation?.title ??
+      ""
+    ).toLowerCase();
     return BONUS_INSIGHTS[topic] ?? [];
   }, [result]);
 
@@ -375,12 +376,18 @@ export function ExplainForm() {
     answerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function handleDomainTopicClick(domainId: string, topic: string) {
+  function handleDomainTopicClick(
+    domainId: string,
+    topic: string,
+    nextLevel?: ExplanationLevel,
+  ) {
     setQuery(topic);
     setActiveTheme(domainId);
     scrollToForm();
-    handleSubmit("default", topic);
+    handleSubmit(nextLevel ?? "default", topic);
   }
+
+
 
   return (
     <div className="stack">
@@ -629,7 +636,29 @@ export function ExplainForm() {
       ) : null}
 
       <section className="card">
-        <h3>Explore by domain</h3>
+        <div className="section-header-row">
+          <h3 className="domain-title">
+            <span>Explore by domain</span>
+            <div className="domain-levels inline">
+              {(["eli5", "eli10", "expert"] as ExplanationLevel[]).map(
+                (value) => (
+                  <button
+                    key={`domain-${value}`}
+                    type="button"
+                    className={`pill mini ${level === value ? "active" : ""}`}
+                    onClick={() => setLevel(value)}
+                  >
+                    {value === "eli5"
+                      ? "ELI-5"
+                      : value === "eli10"
+                        ? "ELI-10"
+                        : "ELI-Expert"}
+                  </button>
+                ),
+              )}
+            </div>
+          </h3>
+        </div>
         <div className="domain-grid">
           {DOMAIN_DEFINITIONS.map((domain) => (
             <div key={domain.id} className="domain-card">
@@ -657,7 +686,9 @@ export function ExplainForm() {
                     <button
                       key={question}
                       className="tag"
-                      onClick={() => handleDomainTopicClick(domain.id, question)}
+                      onClick={() =>
+                        handleDomainTopicClick(domain.id, question)
+                      }
                     >
                       {question}
                     </button>

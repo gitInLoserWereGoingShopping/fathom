@@ -639,7 +639,8 @@ a {
 }
 
 .blocks h3,
-.card > h3 {
+.card > h3,
+.section-header-row > h3 {
   /* display: inline-flex; */
   align-items: center;
   gap: 8px;
@@ -785,6 +786,50 @@ a {
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   margin-top: 12px;
+}
+
+.section-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 466px) {
+  .domain-title {
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.domain-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.domain-levels.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.domain-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  /* justify-content: space-between; */
+  gap: 12px;
+}
+
+.pill.mini {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--pill-title);
 }
 
 .domain-card {
